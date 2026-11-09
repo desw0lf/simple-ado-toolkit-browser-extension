@@ -6,7 +6,7 @@ const DEFAULTS = {
   team: '', // empty = team from URL, else the project's default team
   customCss: `.work-details-pane > div:not(:last-child) { display: none; }
 .work-details-pane > div > div { display: none;}
-.work-details-pane [data-identityid="$$IDENTITY_ID"] { background: rgb(255 255 255 / 5%); }
+.work-details-pane [data-identityid="$$IDENTITY"] { background: rgb(255 255 255 / 5%); }
 `,
 };
 
