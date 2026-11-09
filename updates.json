@@ -1,7 +1,13 @@
 {
   "addons": {
     "simple-ado-toolkit@desw0lf": {
-      "updates": []
+      "updates": [
+        {
+          "version": "0.1.0",
+          "update_link": "https://github.com/desw0lf/simple-ado-toolkit-browser-extension/releases/download/v0.1.0/simple_ado_toolkit-0.1.0.xpi",
+          "update_hash": "sha256:874f517e70123cbee4f4934907672b12808b1dea0e73393ada83c815e43b0a80"
+        }
+      ]
     }
   }
 }
