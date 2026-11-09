@@ -21,24 +21,36 @@ Browser extension (Chrome + Firefox/Zen, Manifest V3) for `https://dev.azure.com
 
 ## Install
 
-**Chrome:** `chrome://extensions` → enable Developer mode → *Load unpacked* → select this folder.
+**Zen / Firefox:** open the `.xpi` from the
+[latest release](https://github.com/desw0lf/simple-ado-toolkit-browser-extension/releases/latest) in
+Zen/Firefox and confirm. Updates install automatically (Firefox checks `updates.json` about once a day;
+to check now: `about:addons` → ⚙ → *Check for Updates*). If the extension doesn't run, open the
+extensions menu and grant it access to `dev.azure.com`.
 
-**Zen / Firefox (temporary, removed on restart):** `about:debugging#/runtime/this-firefox` →
-*Load Temporary Add-on* → select `manifest.json`.
+**Chrome:** `chrome://extensions` → enable Developer mode → *Load unpacked* → select your clone of this
+repo. To update: `git pull`, then click ↻ on the extension.
 
-**Zen / Firefox (permanent):** sign as an unlisted add-on with an
-[AMO API key](https://addons.mozilla.org/developers/addon/api/key/):
+**Development (Zen / Firefox):** `about:debugging#/runtime/this-firefox` → *Load Temporary Add-on* →
+select `manifest.json` (removed on restart).
+
+## Release
 
 ```sh
-npx web-ext sign --api-key=$AMO_JWT_ISSUER --api-secret=$AMO_JWT_SECRET
+./release.sh 0.2.0
 ```
 
-`web-ext-config.mjs` sets the unlisted channel and keeps non-extension files (`scripts/`, the SVG source,
-README) out of the package.
+Sets the manifest version, commits, tags `v0.2.0` and pushes. The *Release* workflow then signs the
+add-on as unlisted on AMO (a few minutes), publishes a GitHub Release with the `.xpi`, and adds it to
+`updates.json` on `master`. Each release needs a new version: AMO never re-signs a version.
 
-Then install the `.xpi` from `web-ext-artifacts/`.
+One-time setup:
+1. Create an [AMO API key](https://addons.mozilla.org/developers/addon/api/key/) (accept the developer
+   agreement if asked).
+2. Repo *Settings* → *Secrets and variables* → *Actions*: add `AMO_JWT_ISSUER` (JWT issuer) and
+   `AMO_JWT_SECRET` (JWT secret).
 
-If the extension doesn't run in Firefox, open the extensions menu and grant it access to `dev.azure.com`.
+`web-ext-config.mjs` sets the unlisted channel and keeps non-extension files out of the package. The
+workflow has a commented-out Chrome Web Store job for later.
 
 ## Icons
 
@@ -47,5 +59,7 @@ Edit `icons/icon.svg`, then regenerate the PNGs (macOS): `swift scripts/render-i
 ## Lint
 
 ```sh
-npx web-ext lint
+npx web-ext lint --self-hosted
 ```
+
+(`--self-hosted` because the manifest has an `update_url`, which only unlisted add-ons may use.)

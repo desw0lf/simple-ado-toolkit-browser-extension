@@ -1,0 +1,84 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*.*.*']
+
+permissions:
+  contents: write
+
+concurrency: release
+
+jobs:
+  firefox:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check tag matches manifest version
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          MANIFEST_VERSION="$(jq -r .version manifest.json)"
+          if [ "$VERSION" != "$MANIFEST_VERSION" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME doesn't match manifest version $MANIFEST_VERSION"
+            exit 1
+          fi
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "ADDON_ID=$(jq -r .browser_specific_settings.gecko.id manifest.json)" >> "$GITHUB_ENV"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # Unlisted channel comes from web-ext-config.mjs; waits for Mozilla's automated review.
+      - name: Sign with AMO
+        run: npx -y web-ext@10 sign --api-key="$AMO_JWT_ISSUER" --api-secret="$AMO_JWT_SECRET"
+        env:
+          AMO_JWT_ISSUER: ${{ secrets.AMO_JWT_ISSUER }}
+          AMO_JWT_SECRET: ${{ secrets.AMO_JWT_SECRET }}
+
+      - name: Create GitHub Release
+        run: |
+          XPI="simple_ado_toolkit-$VERSION.xpi"
+          mv web-ext-artifacts/*.xpi "$XPI"
+          echo "XPI=$XPI" >> "$GITHUB_ENV"
+          echo "HASH=sha256:$(sha256sum "$XPI" | cut -d' ' -f1)" >> "$GITHUB_ENV"
+          gh release create "$GITHUB_REF_NAME" "$XPI" --title "$GITHUB_REF_NAME" --generate-notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Add version to updates.json
+        run: |
+          git switch master
+          git pull -q --ff-only
+          LINK="https://github.com/$GITHUB_REPOSITORY/releases/download/$GITHUB_REF_NAME/$XPI"
+          jq --arg id "$ADDON_ID" --arg v "$VERSION" --arg link "$LINK" --arg hash "$HASH" \
+            '.addons[$id].updates += [{ version: $v, update_link: $link, update_hash: $hash }]' \
+            updates.json > updates.tmp && mv updates.tmp updates.json
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -q -m "updates.json: $GITHUB_REF_NAME" updates.json
+          git push -q origin master
+
+  # Chrome Web Store (not set up yet). To enable: create the item in the Chrome Web Store dashboard,
+  # add the secrets CHROME_EXTENSION_ID, CHROME_CLIENT_ID, CHROME_CLIENT_SECRET, CHROME_REFRESH_TOKEN,
+  # then uncomment.
+  # chrome:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: actions/setup-node@v4
+  #       with:
+  #         node-version: 22
+  #     - run: npx -y web-ext@10 build --filename chrome.zip
+  #     - run: >
+  #         npx -y chrome-webstore-upload-cli@3 --source web-ext-artifacts/chrome.zip
+  #         --extension-id "$EXTENSION_ID" --client-id "$CLIENT_ID"
+  #         --client-secret "$CLIENT_SECRET" --refresh-token "$REFRESH_TOKEN"
+  #       env:
+  #         EXTENSION_ID: ${{ secrets.CHROME_EXTENSION_ID }}
+  #         CLIENT_ID: ${{ secrets.CHROME_CLIENT_ID }}
+  #         CLIENT_SECRET: ${{ secrets.CHROME_CLIENT_SECRET }}
+  #         REFRESH_TOKEN: ${{ secrets.CHROME_REFRESH_TOKEN }}
