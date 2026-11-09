@@ -1,0 +1,42 @@
+{
+  "manifest_version": 3,
+  "name": "Simple ADO Toolkit",
+  "version": "0.1.0",
+  "description": "Azure DevOps helpers: auto-fill Remaining Work, custom CSS, and daily Actual hours per sprint.",
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "permissions": ["storage"],
+  "host_permissions": ["https://dev.azure.com/*"],
+  "background": {
+    "service_worker": "background.js",
+    "scripts": ["background.js"]
+  },
+  "action": {
+    "default_title": "Simple ADO Toolkit",
+    "default_icon": {
+      "16": "icons/icon-16-gray.png",
+      "32": "icons/icon-32-gray.png",
+      "48": "icons/icon-48-gray.png"
+    },
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://dev.azure.com/*"],
+      "js": ["defaults.js", "content.js", "hours.js"],
+      "run_at": "document_start",
+      "all_frames": true
+    }
+  ],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "simple-ado-toolkit@addons",
+      "strict_min_version": "140.0",
+      "data_collection_permissions": { "required": ["none"] }
+    }
+  }
+}

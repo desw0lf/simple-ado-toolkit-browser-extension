@@ -1,0 +1,66 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Simple ADO Toolkit</title>
+  <style>
+    body { width: 380px; margin: 0; padding: 12px; font: 13px system-ui, sans-serif; }
+    h1 { font-size: 14px; margin: 0 0 12px; }
+    section { margin-bottom: 14px; }
+    label.toggle { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+    input[type=text] { flex: 1; min-width: 0; font: 12px ui-monospace, monospace; }
+    textarea { box-sizing: border-box; width: 100%; height: 200px; font: 12px ui-monospace, monospace; }
+    .row { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+    .status { color: #2a7; }
+    .status.error { color: #c33; }
+    .hint { color: #888; font-size: 11px; }
+  </style>
+</head>
+<body>
+  <h1>Simple ADO Toolkit</h1>
+
+  <section>
+    <label class="toggle">
+      <input type="checkbox" id="autoRemaining">
+      Auto-fill Remaining Work (Original − Actual)
+    </label>
+  </section>
+
+  <section>
+    <div class="row">
+      <span>Identity</span>
+      <span class="hint">— set manually or</span>
+      <button id="getIdentity">Get</button>
+    </div>
+    <div class="row">
+      <input type="text" id="identityEmail" spellcheck="false" placeholder="Email / username">
+    </div>
+    <div class="row">
+      <input type="text" id="identityId" spellcheck="false" placeholder="00000000-0000-0000-0000-000000000000">
+    </div>
+    <div class="row status" id="identityStatus"></div>
+  </section>
+
+  <section>
+    <div class="row">
+      <label for="team">Team</label>
+      <input type="text" id="team" spellcheck="false" placeholder="From URL, else project default team">
+    </div>
+    <div class="row status" id="hoursStatus"></div>
+  </section>
+
+  <section>
+    <label for="customCss">Custom CSS</label>
+    <div class="hint"><code>$$IDENTITY</code> → email / username, <code>$$IDENTITY_ID</code> → identity ID</div>
+    <textarea id="customCss" spellcheck="false"></textarea>
+    <div class="row">
+      <button id="save">Save CSS</button>
+      <button id="reset">Reset to default</button>
+      <span class="status" id="cssStatus"></span>
+    </div>
+  </section>
+
+  <script src="defaults.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>
